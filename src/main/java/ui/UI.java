@@ -54,6 +54,7 @@ public class UI extends Application {
 
         primaryStage.setTitle("Joc Frontaal Jenge");
 
+
         root = new BorderPane();
 
         HBox top = new HBox(10);
@@ -94,18 +95,40 @@ public class UI extends Application {
 
         FXCollections.observableHashMap();
         observableList = FXCollections.observableList(cashRegister.getActiveBasket().getSelectedItems());
-
         clearAll.setOnAction((event) -> {
             observableList.clear();
         });
 
-
         ListView<Basket.SelectedMenuItem> lv = new ListView<>(observableList);
+        lv.setMinWidth(340);
         lv.setCellFactory(param -> new HistoryCell());
         root.setRight(lv);
 
+        buildSecondScreen();
+
         primaryStage.setScene(new Scene(root, 1750, 650));
         primaryStage.show();
+    }
+
+    private void buildSecondScreen() {
+        BorderPane customerScreen = new BorderPane();
+
+        ListView<Basket.SelectedMenuItem> customerList = new ListView<>(observableList);
+        customerList.setMinWidth(500);
+        customerList.setMinHeight(700);
+        customerList.setMaxWidth(500);
+        customerList.setMaxHeight(700);
+        customerList.setCellFactory(param -> new CustomerCell());
+        customerScreen.setCenter(customerList);
+
+        HBox hbox = new HBox();
+
+      //  customerScreen.setBottom(totalPriceLabel);
+        Stage stage = new Stage();
+        stage.setScene(new Scene(customerScreen, 1000, 1000));
+
+        //Fill stage with content
+        stage.show();
     }
 
 
@@ -140,7 +163,7 @@ public class UI extends Application {
         Button button = new Button(foodType.getDescription());
         button.setPrefHeight(75.0);
         button.setPrefWidth(200.0);
-        button.setStyle("-fx-font: 24 arial;");
+        button.setStyle("-fx-font: 24 arial; -fx-base: #b6e7c9;");
         button.setOnAction((event) -> {
             root.setCenter(getGridPane(foodType));
         });
@@ -161,6 +184,7 @@ public class UI extends Application {
         Label itemPriceLabel = new Label(menuItem.getPrice() + "");
         itemPriceLabel.setPrefWidth(200.0);
         itemPriceLabel.setAlignment(Pos.CENTER);
+        itemPriceLabel.setStyle("-fx-font: 20 arial;");
 
         vBox.getChildren().addAll(itemNameLabel, itemPriceLabel);
 
@@ -171,6 +195,43 @@ public class UI extends Application {
         });
 
         return button;
+    }
+
+
+    class CustomerCell extends ListCell<Basket.SelectedMenuItem> {
+        HBox hbox = new HBox();
+        Label description = new Label("");
+        Label counter = new Label("");
+        Label subPrice = new Label("");
+
+        Pane pane = new Pane();
+
+        public CustomerCell() {
+            super();
+            hbox.getChildren().addAll(description, counter, pane, subPrice);
+            HBox.setHgrow(pane, Priority.ALWAYS);
+            description.setPrefSize(250, 50);
+            description.setStyle("-fx-font: 24 arial;");
+            counter.setStyle("-fx-font: 24 arial;");
+            counter.setPrefSize(50, 50);
+            subPrice.setStyle("-fx-font: 24 arial;");
+            subPrice.setPrefSize(100, 50);
+        }
+
+        @Override
+        protected void updateItem(Basket.SelectedMenuItem item, boolean empty) {
+            super.updateItem(item, empty);
+            setText(null);
+            setGraphic(null);
+
+            if (item != null && !empty) {
+                description.setText(String.format("%-15.25s", item.getItem().getDescription()));
+                counter.setText(String.format("#%3s", item.getAmount()));
+                subPrice.setText(String.format("%4s€", (item.getItem().getPrice()) * item.getAmount()));
+                setGraphic(hbox);
+            }
+            calculatePrice();
+        }
     }
 
 
@@ -187,8 +248,10 @@ public class UI extends Application {
             hbox.getChildren().addAll(description, counter, pane, button);
             HBox.setHgrow(pane, Priority.ALWAYS);
             // description.setStyle("-fx-background-color: #6b3b50;");
-            description.setPrefSize(100, 30);
-            counter.setPrefSize(30, 30);
+            description.setPrefSize(150, 30);
+            description.setStyle("-fx-font: 20 arial;");
+            counter.setPrefSize(60, 30);
+            counter.setStyle("-fx-font: 20 arial;");
             button.setOnAction(event -> {
                 if (getItem().getAmount() == 1) {
                     getListView().getItems().remove(getItem());
@@ -212,7 +275,6 @@ public class UI extends Application {
             }
             calculatePrice();
         }
-
     }
 
 
