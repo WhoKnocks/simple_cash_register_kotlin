@@ -5,21 +5,24 @@ import core.CashRegister;
 import core.FoodType;
 import core.MenuItem;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.InputMethodTextRun;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import javax.swing.*;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static javafx.application.Application.launch;
@@ -34,7 +37,8 @@ public class UI extends Application {
 
     private BorderPane root;
     private double totalPrice = 0.0;
-    private Label totalPriceLabel = new Label("0.0");
+    private Label totalPriceLabelFirst = new Label("0.0");
+    private Label totalPriceLabelSecond = new Label("0.0");
     private VBox vBox = new VBox();
 
     private CashRegister cashRegister;
@@ -87,9 +91,9 @@ public class UI extends Application {
         HBox priceBox = new HBox(10.0);
         Label priceLabel = new Label("Totale prijs: € ");
         priceLabel.setStyle("-fx-font: 30 arial;");
-        totalPriceLabel.setStyle("-fx-font: 30 arial;");
+        totalPriceLabelFirst.setStyle("-fx-font: 30 arial;");
 
-        priceBox.getChildren().addAll(priceLabel, totalPriceLabel);
+        priceBox.getChildren().addAll(priceLabel, totalPriceLabelFirst);
 
         root.setBottom(priceBox);
 
@@ -100,6 +104,9 @@ public class UI extends Application {
         });
 
         ListView<Basket.SelectedMenuItem> lv = new ListView<>(observableList);
+        lv.getSelectionModel().selectedIndexProperty().addListener((observable, oldvalue, newValue) -> {
+                    Platform.runLater(() -> lv.getSelectionModel().clearSelection());
+                });
         lv.setMinWidth(340);
         lv.setCellFactory(param -> new HistoryCell());
         root.setRight(lv);
@@ -114,16 +121,41 @@ public class UI extends Application {
         BorderPane customerScreen = new BorderPane();
 
         ListView<Basket.SelectedMenuItem> customerList = new ListView<>(observableList);
+        customerList.getSelectionModel().selectedIndexProperty().addListener((observable, oldvalue, newValue) -> {
+            Platform.runLater(() -> customerList.getSelectionModel().clearSelection());
+        });
         customerList.setMinWidth(500);
-        customerList.setMinHeight(700);
+        customerList.setMinHeight(400);
         customerList.setMaxWidth(500);
         customerList.setMaxHeight(700);
         customerList.setCellFactory(param -> new CustomerCell());
         customerScreen.setCenter(customerList);
 
-        HBox hbox = new HBox();
+        HBox priceBox = new HBox(10.0);
+        priceBox.setAlignment(Pos.CENTER);
+        priceBox.setPadding(new Insets(50, 0, 50, 0));
+        Label priceLabel = new Label("Totale prijs: € ");
+        priceLabel.setStyle("-fx-font: 50 arial;");
+        totalPriceLabelSecond.setStyle("-fx-font: 50 arial;");
 
-      //  customerScreen.setBottom(totalPriceLabel);
+        priceBox.getChildren().addAll(priceLabel, totalPriceLabelSecond);
+        customerScreen.setBottom(priceBox);
+
+
+        URL resource1 = getClass().getResource("/img/joc-header.jpg");
+
+        ImageView iv3 = new ImageView();
+        try {
+            iv3.setImage(new Image(resource1.openStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        HBox imageBox = new HBox();
+        imageBox.setPadding(new Insets(20, 0, 20, 0));
+        imageBox.setAlignment(Pos.CENTER);
+        imageBox.getChildren().addAll(iv3);
+        customerScreen.setTop(imageBox);
+
         Stage stage = new Stage();
         stage.setScene(new Scene(customerScreen, 1000, 1000));
 
@@ -226,8 +258,8 @@ public class UI extends Application {
 
             if (item != null && !empty) {
                 description.setText(String.format("%-15.25s", item.getItem().getDescription()));
-                counter.setText(String.format("#%3s", item.getAmount()));
-                subPrice.setText(String.format("%4s€", (item.getItem().getPrice()) * item.getAmount()));
+                counter.setText(String.format("%3s", item.getAmount()));
+                subPrice.setText(String.format("€ %4s", (item.getItem().getPrice()) * item.getAmount()));
                 setGraphic(hbox);
             }
             calculatePrice();
@@ -302,7 +334,8 @@ public class UI extends Application {
     }
 
     public void calculatePrice() {
-        totalPriceLabel.setText(cashRegister.getActiveBasket().calcTotalPrice() + "");
+        totalPriceLabelFirst.setText(cashRegister.getActiveBasket().calcTotalPrice() + "");
+        totalPriceLabelSecond.setText(cashRegister.getActiveBasket().calcTotalPrice() + "");
     }
 
 
